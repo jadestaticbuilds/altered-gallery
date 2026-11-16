@@ -37,6 +37,7 @@
   .view{ transition:opacity .45s ease, transform .45s ease; }
   .view.hidden{ display:none; }
   .view.leaving{ opacity:0; transform:scale(.985); }
+  .hidden{ display:none !important; }
 
   /* ---------- wing ---------- */
   .wing-head{ text-align:center; padding:10px 0 4px; position:relative; }
@@ -117,16 +118,16 @@
     outline:none;
   }
   .stage:focus-visible{ box-shadow:0 22px 44px rgba(0,0,0,.65), 0 0 0 3px var(--gold); }
+  #stackWrap{ position:absolute; inset:0; transition:transform .65s ease; }
   .layer{ position:absolute; inset:0; width:100%; height:100%; }
   img.layer{ object-fit:cover; pointer-events:none; }
-  .veil{
-    filter:brightness(.30) sepia(.52) saturate(.52) contrast(1.03);
-  }
+  .patch{ position:absolute; pointer-events:none; }
   .veilshade{
     pointer-events:none;
     background:radial-gradient(115% 90% at 50% 42%, rgba(0,0,0,0) 46%, rgba(12,6,2,.38) 82%, rgba(8,4,1,.62) 100%);
   }
-  .reveal{ pointer-events:none; }
+  #litStack{ position:absolute; inset:0; pointer-events:none; }
+  #litStack .baseimg{ transition:opacity .7s ease; }
   .beam{ pointer-events:none; mix-blend-mode:screen; }
   .motes{ pointer-events:none; overflow:hidden; }
   .mote{
@@ -139,12 +140,56 @@
   }
   @keyframes drift{ from{ transform:translate(0,0); } to{ transform:translate(var(--dx), var(--dy)); } }
   @keyframes twinkle{ from{ opacity:.25; } to{ opacity:.9; } }
-  @media (prefers-reduced-motion: reduce){
-    .mote{ animation:none; opacity:.55; }
-    .view{ transition:none; }
+
+  /* life layers */
+  .glintlayer{
+    mix-blend-mode:screen; opacity:.55;
+    -webkit-mask-image:repeating-linear-gradient(178deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 30%, #ffffff 44%, rgba(0,0,0,0) 58%, rgba(0,0,0,0) 100%);
+    mask-image:repeating-linear-gradient(178deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 30%, #ffffff 44%, rgba(0,0,0,0) 58%, rgba(0,0,0,0) 100%);
+    -webkit-mask-size:100% 300%; mask-size:100% 300%;
+    animation:glintflow 26s linear infinite, glintpulse 9s ease-in-out infinite alternate;
   }
+  @keyframes glintflow{ from{ -webkit-mask-position:50% 0%; mask-position:50% 0%; } to{ -webkit-mask-position:50% 100%; mask-position:50% 100%; } }
+  @keyframes glintpulse{ from{ opacity:.4; } to{ opacity:.62; } }
+  .mistlayer{ opacity:.35; animation:mistdrift 46s ease-in-out infinite alternate; }
+  @keyframes mistdrift{ from{ transform:translateX(-2.2%); } to{ transform:translateX(2.2%); } }
+  .winglow{ mix-blend-mode:screen; animation:flicker 4.3s ease-in-out infinite alternate; }
+  @keyframes flicker{ from{ opacity:.68; } to{ opacity:.92; } }
+  .bobbing{ animation:bob 11s ease-in-out infinite alternate; }
+  @keyframes bob{ from{ transform:translateY(-3px); } to{ transform:translateY(3px); } }
+  .petal{
+    position:absolute; width:7px; height:5px; border-radius:60% 40% 60% 40%;
+    pointer-events:none;
+    animation-name:petalfall; animation-timing-function:linear; animation-iteration-count:infinite;
+  }
+  .petal i{
+    display:block; width:100%; height:100%; border-radius:inherit;
+    animation:petalsway 2.6s ease-in-out infinite alternate;
+  }
+  @keyframes petalfall{ from{ transform:translateY(0) rotate(0deg); opacity:0; } 8%{ opacity:.85; } 88%{ opacity:.7; } to{ transform:translateY(430px) rotate(300deg); opacity:0; } }
+  @keyframes petalsway{ from{ transform:translateX(-7px); } to{ transform:translateX(7px); } }
+  .rainstreak{
+    position:absolute; top:-12%; width:1px; height:11%;
+    background:linear-gradient(180deg, rgba(210,225,235,0), rgba(210,225,235,.5), rgba(210,225,235,0));
+    animation:rainfall .8s linear infinite; pointer-events:none;
+  }
+  @keyframes rainfall{ from{ transform:translateY(0); } to{ transform:translateY(560px); } }
+  .mistveil{
+    pointer-events:none;
+    background:linear-gradient(180deg, rgba(196,200,196,.10), rgba(196,200,196,.20) 45%, rgba(160,164,158,.08) 75%, rgba(196,200,196,.14));
+  }
+  .glaze-warm{ background:linear-gradient(165deg, rgba(255,176,84,.22), rgba(146,84,20,.10) 55%, rgba(60,30,4,.12)); mix-blend-mode:overlay; }
+  .glaze-cool{ background:linear-gradient(165deg, rgba(96,128,168,.20), rgba(30,44,74,.12) 60%, rgba(10,16,30,.10)); mix-blend-mode:overlay; }
+  .glaze-rose{ background:linear-gradient(165deg, rgba(255,138,150,.16), rgba(120,40,60,.10) 60%, rgba(50,10,20,.08)); mix-blend-mode:overlay; }
+  #litStack.time-dawn .seasonpatch{ filter:brightness(1.07) sepia(.12); }
+  #litStack.time-dusk .seasonpatch{ filter:brightness(.97) sepia(.22); }
+  .siglayer{ mix-blend-mode:screen; opacity:.92; }
+  .nomotion .glintlayer, .nomotion .mistlayer, .nomotion .winglow, .nomotion .bobbing{ animation:none; }
+  .nomotion .petal, .nomotion .rainstreak{ display:none; }
+
   .approach-ui{ max-width:430px; margin:18px auto 0; text-align:center; }
   .plaque-big{ width:100%; margin-top:0; }
+  .plaque .versionline{ margin-top:5px; font-size:12px; font-style:italic; color:var(--gold); }
   .hint{ margin-top:12px; font-size:13px; font-style:italic; color:var(--ink-dim); }
   .controls{
     margin-top:16px; display:flex; flex-wrap:wrap; gap:10px; justify-content:center;
@@ -158,7 +203,61 @@
     -webkit-tap-highlight-color:transparent;
   }
   button.ctl:active{ background:linear-gradient(180deg, #3a290c, #281a05); }
-  .wing-foot{ margin-top:22px; display:flex; justify-content:center; }
+  button.ctl.sel{ border-color:var(--gold); color:#f4e3b2; box-shadow:inset 0 0 0 1px var(--gold); }
+  .verbbar{
+    margin-top:14px; display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
+  }
+  .verbbar button.ctl{ padding:10px 13px; font-size:13.5px; }
+  .menu{
+    margin-top:12px; text-align:left;
+    background:linear-gradient(180deg, #2b1d0e, #211505);
+    border:1px solid var(--line); padding:12px 13px 13px;
+    box-shadow:0 6px 14px rgba(0,0,0,.4);
+  }
+  .menu h3{ font-size:12px; font-weight:normal; letter-spacing:.24em; text-transform:uppercase; color:var(--gold); text-align:center; }
+  .menu .row{ margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .menu .row .elname{ width:100%; font-size:13.5px; color:var(--ink); }
+  .menu .opt{
+    appearance:none; cursor:pointer; min-height:44px; padding:8px 13px;
+    font-family:inherit; font-size:13.5px; color:var(--ink-dim);
+    background:#1c1206; border:1px solid var(--line); border-radius:3px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .menu .opt.sel{ color:#f4e3b2; border-color:var(--gold); }
+  .menu p.mnote{ margin-top:10px; font-size:12.5px; line-height:1.5; color:var(--ink-dim); font-style:italic; }
+  .menu input[type="text"]{
+    width:100%; min-height:44px; padding:9px 11px; margin-top:10px;
+    font-family:inherit; font-size:15px; color:var(--ink);
+    background:#160e04; border:1px solid var(--line); border-radius:3px;
+    -webkit-user-select:text; user-select:text;
+  }
+  #signPad{
+    display:block; width:100%; height:110px; margin-top:10px;
+    background:#120b05; border:1px solid var(--line); border-radius:3px; touch-action:none;
+  }
+  .wing-foot{ margin-top:22px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+
+  /* ---------- collection ---------- */
+  .coll-head{ text-align:center; padding:10px 0 4px; }
+  .coll-head h1{ font-size:22px; font-weight:normal; letter-spacing:.12em; }
+  .coll-list{ margin-top:24px; display:flex; flex-direction:column; gap:20px; }
+  .coll-item{
+    background:linear-gradient(180deg, #2b1d0e, #211505);
+    border:1px solid var(--line); padding:13px 14px 14px; text-align:center;
+    box-shadow:0 6px 14px rgba(0,0,0,.4);
+  }
+  .coll-item h2{ font-size:16px; font-weight:normal; color:var(--ink); }
+  .coll-item .when{ margin-top:3px; font-size:12px; font-style:italic; color:var(--ink-dim); }
+  .coll-item .desc{ margin-top:6px; font-size:12.5px; line-height:1.5; color:var(--ink-dim); }
+  .coll-item .controls{ margin-top:11px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .mote{ animation:none; opacity:.55; }
+    .view{ transition:none; }
+    .glintlayer, .mistlayer, .winglow, .bobbing{ animation:none; }
+    .petal, .rainstreak{ display:none; }
+    #stackWrap{ transition:none; }
+  }
 </style>
 </head>
 <body>
@@ -169,7 +268,7 @@
     <header class="wing-head">
       <h1>THE ALTERED GALLERY</h1>
       <p class="wing-sub">Wing One</p>
-      <span class="tag">STAGE 0</span>
+      <span class="tag">STAGE 1</span>
     </header>
 
     <div class="wall">
@@ -252,6 +351,7 @@
     <p class="note" id="wingNote" role="status"></p>
 
     <div class="wing-foot">
+      <button class="ctl" id="collectionBtn" type="button">Collection</button>
       <button class="ctl" id="soundBtnWing" type="button">Sound: on</button>
     </div>
   </section>
@@ -260,11 +360,37 @@
   <section id="approach" class="view hidden">
     <div class="stage-wrap">
       <div id="stage" class="stage" tabindex="0" role="slider" aria-label="Shaft of light position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
-        <img class="layer veil" src="assets/valley.webp" alt="" draggable="false">
-        <div class="layer veilshade"></div>
-        <img class="layer reveal" id="layerReveal" src="assets/valley.webp" alt="The Valley of the Golden River" draggable="false">
-        <div class="layer beam" id="layerBeam"></div>
-        <div class="layer motes" id="layerMotes"></div>
+        <div id="stackWrap">
+          <img class="layer" id="layerVeil" alt="" draggable="false">
+          <div class="layer veilshade"></div>
+          <div id="litStack">
+            <img class="layer baseimg" id="baseA" alt="The Valley of the Golden River" draggable="false">
+            <img class="layer baseimg" id="baseB" alt="" draggable="false" style="opacity:0">
+            <img class="layer" id="layerSheen" alt="" draggable="false" style="mix-blend-mode:soft-light;opacity:0">
+            <img class="patch" id="patchRainRiver" alt="" draggable="false" style="opacity:0">
+            <img class="patch seasonpatch" data-patch="under-blossom" alt="" draggable="false">
+            <img class="patch seasonpatch" data-patch="under-pavilion" alt="" draggable="false">
+            <img class="patch seasonpatch" data-patch="under-rockw" alt="" draggable="false">
+            <img class="patch seasonpatch" data-patch="under-rocke" alt="" draggable="false">
+            <img class="patch seasonpatch" data-patch="under-rocksfg" alt="" draggable="false">
+            <img class="patch seasonpatch" id="shadowBlossom" alt="" draggable="false" style="opacity:.55">
+            <img class="patch seasonpatch" id="shadowRockw" alt="" draggable="false" style="opacity:.55">
+            <img class="patch seasonpatch" id="cutBlossom" alt="" draggable="false">
+            <img class="patch seasonpatch" id="cutRockw" alt="" draggable="false">
+            <img class="patch" id="layerWinGlow" alt="" draggable="false">
+            <img class="patch" id="patchRainWindows" alt="" draggable="false" style="mix-blend-mode:screen;opacity:0">
+            <img class="layer glintlayer" id="layerGlint" alt="" draggable="false">
+            <img class="layer mistlayer" id="layerMist" alt="" draggable="false">
+            <div class="layer" id="layerPetals" style="overflow:hidden"></div>
+            <div class="layer" id="layerRain" style="overflow:hidden;opacity:0"></div>
+            <div class="layer mistveil" id="layerMistVeil" style="opacity:0"></div>
+            <img class="layer" id="layerDamage" alt="" draggable="false" style="opacity:0">
+            <div class="layer" id="layerGlaze"></div>
+            <img class="patch siglayer" id="layerSignature" alt="" draggable="false">
+          </div>
+          <div class="layer beam" id="layerBeam"></div>
+          <div class="layer motes" id="layerMotes"></div>
+        </div>
       </div>
     </div>
     <div class="approach-ui">
@@ -272,22 +398,48 @@
         <h2>The Valley of the Golden River</h2>
         <p class="school">in the Caravaggio manner</p>
         <p class="line">A river of gold crosses a dark valley, and the travelling light decides what may be seen.</p>
+        <p class="versionline hidden" id="plaqueVersion"></p>
       </div>
       <p class="hint">Drag across the painting to move the light.</p>
       <div class="controls">
         <button class="ctl" id="backBtn" type="button">Step back</button>
-        <button class="ctl" id="restoreBtn" type="button">Restore</button>
+        <button class="ctl" id="restoreBtn" type="button">Reset copy</button>
         <button class="ctl" id="printBtn" type="button">Save a print</button>
+        <button class="ctl" id="motionBtn" type="button">Motion: on</button>
         <button class="ctl" id="soundBtn" type="button">Sound: on</button>
       </div>
+      <div class="verbbar" role="group" aria-label="Alteration verbs">
+        <button class="ctl" data-menu="season" type="button">Season</button>
+        <button class="ctl" data-menu="time" type="button">Time</button>
+        <button class="ctl" data-menu="weather" type="button">Weather</button>
+        <button class="ctl" data-menu="elements" type="button">Elements</button>
+        <button class="ctl" id="restoreStepBtn" type="button">Restoring</button>
+        <button class="ctl" data-menu="glaze" type="button">Glaze</button>
+        <button class="ctl" data-menu="view" type="button">View</button>
+        <button class="ctl" data-menu="sign" type="button">Sign and Save</button>
+      </div>
+      <div class="menu hidden" id="menuPanel"></div>
       <p class="note" id="approachNote" role="status"></p>
+    </div>
+  </section>
+
+  <!-- ================= COLLECTION ================= -->
+  <section id="collection" class="view hidden">
+    <header class="coll-head">
+      <h1>YOUR COLLECTION</h1>
+      <p class="wing-sub">Versions you have signed and kept</p>
+    </header>
+    <div class="coll-list" id="collList"></div>
+    <p class="note" id="collNote" role="status"></p>
+    <div class="wing-foot">
+      <button class="ctl" id="collBackBtn" type="button">Back to the wing</button>
     </div>
   </section>
 </div>
 
 <script id="core">
-/* The Altered Gallery: state recipes and shaft geometry.
-   Pure functions only. The smoke test loads this block in Node. */
+/* The Altered Gallery: state recipes, shaft geometry, the Valley manifest.
+   Pure functions and data only. The smoke test loads this block in Node. */
 var AP_STORE_KEY = "ap-state-v1";
 var AP_SCHEMA = 1;
 
@@ -320,20 +472,127 @@ function apBandStops(pos, coreExtra, featherExtra){
   return [c - core - feather, c - core, c + core, c + core + feather];
 }
 
+/* ---------- the Valley: vocabulary ---------- */
+var AP_SEASONS = ["spring", "summer", "autumn", "winter"];
+var AP_TIMES = ["night", "dawn", "dusk"];
+var AP_WEATHERS = ["clear", "rain", "mist"];
+var AP_GLAZES = ["warm", "cool", "rose"];
+var AP_CROPS = ["pavilion", "river"];
+var AP_ELEMENTS = {
+  blossom:  { label: "The blossom tree",      anchors: ["home", "grove", "terrace", "hidden"],
+              anchorLabels: { home: "At home", grove: "The grove", terrace: "The terrace", hidden: "Dismissed" } },
+  pavilion: { label: "The pavilion",          anchors: ["home", "hidden"],
+              anchorLabels: { home: "Standing", hidden: "Dismissed" } },
+  rockw:    { label: "The west floating rock", anchors: ["home", "high", "hidden"],
+              anchorLabels: { home: "At home", high: "High anchor", hidden: "Dismissed" } },
+  rocke:    { label: "The east floating rock", anchors: ["home", "hidden"],
+              anchorLabels: { home: "At home", hidden: "Dismissed" } },
+  rocksfg:  { label: "The foreground rocks",  anchors: ["home", "hidden"],
+              anchorLabels: { home: "In place", hidden: "Dismissed" } }
+};
+function apDefaultElements(){
+  return { blossom: "home", pavilion: "home", rockw: "home", rocke: "home", rocksfg: "home" };
+}
+
+/* ---------- the Valley: layer manifest ----------
+   Every shipped asset, its z-order in the lit stack, blend, and role.
+   The smoke test checks this list against the files on disk. */
+var AP_VALLEY_DIR = "assets/valley/";
+var AP_MANIFEST = [
+  { file: "assets/valley.webp",            z: -2, blend: "normal",    role: "spring master, night (also the wing thumbnail)" },
+  { file: "assets/valley/veil.webp",       z: -1, blend: "normal",    role: "painted darkness veil, the as-hung state" },
+  { file: "assets/valley/base-summer.webp", z: 0, blend: "normal",    role: "season base, summer night" },
+  { file: "assets/valley/base-autumn.webp", z: 0, blend: "normal",    role: "season base, autumn night" },
+  { file: "assets/valley/base-winter.webp", z: 0, blend: "normal",    role: "season base, winter night" },
+  { file: "assets/valley/time-dawn.webp",  z: 0, blend: "normal",    role: "time base, spring dawn" },
+  { file: "assets/valley/time-dusk.webp",  z: 0, blend: "normal",    role: "time base, spring dusk" },
+  { file: "assets/valley/base-summer-dawn.webp", z: 0, blend: "normal", role: "season base, summer dawn (ratio bake)" },
+  { file: "assets/valley/base-summer-dusk.webp", z: 0, blend: "normal", role: "season base, summer dusk (ratio bake)" },
+  { file: "assets/valley/base-autumn-dawn.webp", z: 0, blend: "normal", role: "season base, autumn dawn (ratio bake)" },
+  { file: "assets/valley/base-autumn-dusk.webp", z: 0, blend: "normal", role: "season base, autumn dusk (ratio bake)" },
+  { file: "assets/valley/base-winter-dawn.webp", z: 0, blend: "normal", role: "season base, winter dawn (ratio bake)" },
+  { file: "assets/valley/base-winter-dusk.webp", z: 0, blend: "normal", role: "season base, winter dusk (ratio bake)" },
+  { file: "assets/valley/rain-sheen.webp", z: 1, blend: "soft-light", role: "weather response, wet sheen on stone" },
+  { file: "assets/valley/rain-river.webp", z: 2, blend: "normal",    role: "weather response, the river swollen" },
+  { file: "assets/valley/rain-windows.webp", z: 9, blend: "screen",  role: "weather response, windows warming" },
+  { file: "assets/valley/win-glow.webp",   z: 8, blend: "screen",    role: "life, pavilion window flicker" },
+  { file: "assets/valley/glint.webp",      z: 10, blend: "screen",   role: "life, river glint strip" },
+  { file: "assets/valley/mist.webp",       z: 11, blend: "normal",   role: "life and weather, drifting mist from the painting's own passages" },
+  { file: "assets/valley/damaged.webp",    z: 14, blend: "normal",   role: "restoration set, varnish and craquelure" }
+];
+(function(){
+  var els = ["blossom", "pavilion", "rockw", "rocke", "rocksfg"], i, s, e;
+  var seasons = ["summer", "autumn", "winter"];
+  for (i = 0; i < els.length; i++) {
+    e = els[i];
+    AP_MANIFEST.push({ file: AP_VALLEY_DIR + "under-" + e + ".webp", z: 3, blend: "normal", role: "underlayer patch, " + e + " absent (spring)" });
+    AP_MANIFEST.push({ file: AP_VALLEY_DIR + "el-" + e + ".webp", z: 6, blend: "normal", role: "element cutout, " + e + " (spring)" });
+    AP_MANIFEST.push({ file: AP_VALLEY_DIR + "shadow-" + e + ".webp", z: 5, blend: "normal", role: "painted shadow, " + e });
+    for (s = 0; s < seasons.length; s++) {
+      AP_MANIFEST.push({ file: AP_VALLEY_DIR + "under-" + e + "-" + seasons[s] + ".webp", z: 3, blend: "normal", role: "underlayer patch, " + e + " absent (" + seasons[s] + " bake)" });
+      AP_MANIFEST.push({ file: AP_VALLEY_DIR + "el-" + e + "-" + seasons[s] + ".webp", z: 6, blend: "normal", role: "element cutout, " + e + " (" + seasons[s] + " bake)" });
+    }
+  }
+})();
+
+/* Geometry of the cropped layers, fractions of the canvas:
+   [left, top, width, height], measured in production. */
+var AP_GEO = {
+  "under-blossom": [0.1278, 0.3181, 0.4986, 0.2493],
+  "el-blossom": [0.1319, 0.3215, 0.4875, 0.2444],
+  "under-pavilion": [0.5306, 0.3479, 0.3153, 0.1924],
+  "el-pavilion": [0.5375, 0.3507, 0.3014, 0.1861],
+  "under-rockw": [0.0778, 0.1194, 0.2306, 0.1757],
+  "el-rockw": [0.075, 0.1181, 0.2514, 0.1743],
+  "under-rocke": [0.7403, 0.1583, 0.2597, 0.2403],
+  "el-rocke": [0.7472, 0.1618, 0.2528, 0.2347],
+  "under-rocksfg": [0.0, 0.5181, 0.4056, 0.3222],
+  "el-rocksfg": [0.0, 0.5208, 0.3986, 0.316],
+  "rain-river": [0.0917, 0.1361, 0.8292, 0.8639],
+  "rain-windows": [0.6, 0.4, 0.1889, 0.1],
+  "win-glow": [0.6, 0.4, 0.1889, 0.1]
+};
+/* Anchor offsets for movable elements, fractions of the canvas [dx, dy]
+   applied to the cutout and its shadow. Home is no offset and no cutout. */
+var AP_ANCHORS = {
+  blossom: { grove: [-0.106, 0.036], terrace: [0.084, 0.076] },
+  rockw: { high: [0.209, -0.095] }
+};
+/* Vetted crops: transform origin (the crop center) and scale. */
+var AP_CROP_VIEWS = {
+  pavilion: { origin: [0.49, 0.445], scale: 1.4286, label: "The Pavilion and the Blossom" },
+  river: { origin: [0.45, 0.83], scale: 1.4286, label: "The River Foreground" }
+};
+
+function apBaseFile(recipe){
+  var season = recipe.season || "spring", time = recipe.time || "night";
+  if (season === "spring") {
+    if (time === "night") return "assets/valley.webp";
+    return AP_VALLEY_DIR + "time-" + time + ".webp";
+  }
+  if (time === "night") return AP_VALLEY_DIR + "base-" + season + ".webp";
+  return AP_VALLEY_DIR + "base-" + season + "-" + time + ".webp";
+}
+function apSeasonFile(stem, season){
+  if (!season || season === "spring") return AP_VALLEY_DIR + stem + ".webp";
+  return AP_VALLEY_DIR + stem + "-" + season + ".webp";
+}
+
+/* ---------- recipes ---------- */
 function apDefaultRecipe(painting){
   return {
     v: AP_SCHEMA,
     painting: painting,
     base: "original",
     light: { pos: AP_SHAFT.home },
-    time: null,
-    season: null,
-    weather: null,
+    time: "night",
+    season: "spring",
+    weather: { kind: "clear", amount: 0.6 },
     glaze: null,
-    elements: {},
+    elements: apDefaultElements(),
     figures: {},
     motion: true,
-    restoration: 1,
+    restoration: 0,
     crop: null,
     repaints: [],
     signed: null,
@@ -348,6 +607,7 @@ function apDefaultState(){
     collection: []
   };
 }
+function apOneOf(v, list, fallback){ return list.indexOf(v) >= 0 ? v : fallback; }
 function apNormalizeRecipe(raw, painting){
   var d = apDefaultRecipe(painting);
   if (!raw || typeof raw !== "object") return d;
@@ -357,9 +617,22 @@ function apNormalizeRecipe(raw, painting){
   out.v = AP_SCHEMA;
   out.painting = painting;
   out.light = { pos: apClamp01(raw.light && raw.light.pos) };
-  if (!out.elements || typeof out.elements !== "object") out.elements = {};
+  out.time = apOneOf(raw.time, AP_TIMES, "night");
+  out.season = apOneOf(raw.season, AP_SEASONS, "spring");
+  var w = (raw.weather && typeof raw.weather === "object") ? raw.weather : {};
+  out.weather = { kind: apOneOf(w.kind, AP_WEATHERS, "clear"),
+                  amount: (typeof w.amount === "number" && isFinite(w.amount)) ? Math.min(1, Math.max(0, w.amount)) : 0.6 };
+  out.glaze = apOneOf(raw.glaze, AP_GLAZES, null);
+  var els = apDefaultElements(), rawEls = (raw.elements && typeof raw.elements === "object") ? raw.elements : {}, e;
+  for (e in els) els[e] = apOneOf(rawEls[e], AP_ELEMENTS[e].anchors, "home");
+  out.elements = els;
   if (!out.figures || typeof out.figures !== "object") out.figures = {};
+  out.motion = raw.motion !== false;
+  out.restoration = (typeof raw.restoration === "number" && isFinite(raw.restoration))
+    ? Math.min(1, Math.max(0, raw.restoration)) : 0;
+  out.crop = apOneOf(raw.crop, AP_CROPS, null);
   if (!Array.isArray(out.repaints)) out.repaints = [];
+  if (!out.signed || typeof out.signed !== "object") out.signed = null;
   return out;
 }
 function apNormalizeState(raw){
@@ -408,6 +681,25 @@ function apSetShaft(state, painting, pos, nowIso){
 function apResetPainting(state, painting){
   state.copies[painting] = apDefaultRecipe(painting);
   return state;
+}
+function apRestorationStep(r){
+  /* one restoring step: a third of the way from wherever the copy stands */
+  var steps = [0, 1/3, 2/3, 1], i;
+  r = Math.min(1, Math.max(0, Number(r) || 0));
+  for (i = 0; i < steps.length; i++) if (r < steps[i] - 0.001) return steps[i];
+  return 1;
+}
+function apDescribeRecipe(recipe){
+  var bits = [];
+  bits.push(recipe.season === "spring" ? "Spring" : recipe.season[0].toUpperCase() + recipe.season.slice(1));
+  bits.push(recipe.time === "night" ? "Night" : recipe.time[0].toUpperCase() + recipe.time.slice(1));
+  if (recipe.weather && recipe.weather.kind !== "clear")
+    bits.push(recipe.weather.kind === "rain" ? "Rain" : "Mist");
+  if (recipe.glaze) bits.push(recipe.glaze[0].toUpperCase() + recipe.glaze.slice(1) + " glaze");
+  if (recipe.restoration >= 1) bits.push("Restored");
+  else if (recipe.restoration > 0) bits.push("Partly restored");
+  else bits.push("Unrestored");
+  return bits.join(", ");
 }
 </script>
 
@@ -481,16 +773,34 @@ function apIdbList(){
 </script>
 
 <script id="shell">
-/* The Altered Gallery: shell. Views, the light verb, the hush, export. */
+/* The Altered Gallery: shell. Views, the light verb, the full Valley
+   layer stack, the verb menus, signing and the collection, export, hush. */
 (function(){
   "use strict";
   var state = apLoadState(window.localStorage);
   var $ = function(id){ return document.getElementById(id); };
-  var wing = $("wing"), approach = $("approach"), stage = $("stage");
-  var reveal = $("layerReveal"), beam = $("layerBeam"), motesBox = $("layerMotes");
+  var wing = $("wing"), approach = $("approach"), collectionView = $("collection"), stage = $("stage");
+  var litStack = $("litStack"), wrap = $("stackWrap");
+  var beam = $("layerBeam"), motesBox = $("layerMotes");
   var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function recipe(){ return state.copies.valley; }
+  function persist(){ recipe().updated = new Date().toISOString(); apSaveState(window.localStorage, state); }
+  function note(t){ $("approachNote").textContent = t; }
 
-  /* ---------- the shaft of light ---------- */
+  /* ---------- lazy layer loading ---------- */
+  function ensureSrc(img, file){
+    if (!img || !file) return;
+    if (img.getAttribute("data-cur") !== file) { img.setAttribute("data-cur", file); img.src = file; }
+  }
+  function place(img, geo, dx, dy){
+    img.style.left = ((geo[0] + (dx || 0)) * 100) + "%";
+    img.style.top = ((geo[1] + (dy || 0)) * 100) + "%";
+    img.style.width = (geo[2] * 100) + "%";
+    img.style.height = (geo[3] * 100) + "%";
+  }
+  function show(img, on){ img.style.display = on ? "" : "none"; }
+
+  /* ---------- the shaft of light (Stage 0, unchanged geometry) ---------- */
   function maskGradient(stops){
     return "linear-gradient(" + AP_SHAFT.angle + "deg, rgba(0,0,0,0) " + stops[0] + "%, #ffffff " +
       stops[1] + "%, #ffffff " + stops[2] + "%, rgba(0,0,0,0) " + stops[3] + "%)";
@@ -505,8 +815,8 @@ function apIdbList(){
   function applyShaft(pos){
     shaftPos = apClamp01(pos);
     var m = maskGradient(apBandStops(shaftPos));
-    reveal.style.webkitMaskImage = m;
-    reveal.style.maskImage = m;
+    litStack.style.webkitMaskImage = m;
+    litStack.style.maskImage = m;
     motesBox.style.webkitMaskImage = m;
     motesBox.style.maskImage = m;
     beam.style.background = beamGradient(apBandStops(shaftPos, 9, 9));
@@ -568,23 +878,206 @@ function apIdbList(){
     }
   });
 
+  /* ---------- base crossfade ---------- */
+  var baseFront = $("baseA"), baseBack = $("baseB"), baseFile = null, baseBusy = false;
+  function setBase(file){
+    if (file === baseFile) return;
+    if (!baseFile) { baseFront.src = file; baseFile = file; return; }
+    if (baseBusy) { baseFront.src = file; baseFile = file; return; }
+    baseBusy = true;
+    var probe = new Image();
+    probe.onload = function(){
+      baseBack.src = file;
+      baseBack.style.opacity = "1";
+      baseFront.style.opacity = "0";
+      window.setTimeout(function(){
+        var t = baseFront; baseFront = baseBack; baseBack = t;
+        baseFile = file; baseBusy = false;
+      }, 720);
+    };
+    probe.onerror = function(){ baseBusy = false; };
+    probe.src = file;
+  }
+
+  /* ---------- life: petals and rain, built once, restyled by state ---------- */
+  var petalsBox = $("layerPetals"), rainBox = $("layerRain"), petalKey = "";
+  function buildRain(){
+    var i, s;
+    for (i = 0; i < 34; i++) {
+      s = document.createElement("span");
+      s.className = "rainstreak";
+      s.style.left = (Math.random() * 100) + "%";
+      s.style.animationDelay = (-Math.random() * 0.8) + "s";
+      s.style.animationDuration = (0.65 + Math.random() * 0.4) + "s";
+      s.style.opacity = (0.25 + Math.random() * 0.5);
+      rainBox.appendChild(s);
+    }
+  }
+  function buildPetals(){
+    var r = recipe();
+    var key = r.season + "|" + r.elements.blossom + "|" + r.weather.kind + "|" + r.motion;
+    if (key === petalKey) return;
+    petalKey = key;
+    petalsBox.innerHTML = "";
+    if (!r.motion || reduced) return;
+    if (r.elements.blossom === "hidden") return;
+    if (r.season !== "spring" && r.season !== "autumn") return;
+    var off = AP_ANCHORS.blossom[r.elements.blossom] || [0, 0];
+    var n = r.weather.kind === "rain" ? 5 : 10, i, p, inner;
+    for (i = 0; i < n; i++) {
+      p = document.createElement("span");
+      p.className = "petal";
+      p.style.left = (20 + Math.random() * 30 + off[0] * 100) + "%";
+      p.style.top = (35 + Math.random() * 10 + off[1] * 100) + "%";
+      p.style.animationDuration = (11 + Math.random() * 6) + "s";
+      p.style.animationDelay = (-Math.random() * 14) + "s";
+      inner = document.createElement("i");
+      inner.style.background = r.season === "autumn"
+        ? "radial-gradient(circle, #e0aa58 0%, #b97c33 70%, rgba(185,124,51,0) 100%)"
+        : "radial-gradient(circle, #f2c3d4 0%, #df94b1 70%, rgba(223,148,177,0) 100%)";
+      p.appendChild(inner);
+      petalsBox.appendChild(p);
+    }
+  }
+
+  /* ---------- the render pass: recipe to layer stack ---------- */
+  var patchImgs = {};
+  Array.prototype.forEach.call(document.querySelectorAll("[data-patch]"), function(img){
+    patchImgs[img.getAttribute("data-patch")] = img;
+  });
+  var cutBlossom = $("cutBlossom"), cutRockw = $("cutRockw"),
+      shadowBlossom = $("shadowBlossom"), shadowRockw = $("shadowRockw");
+
+  function renderAll(){
+    var r = recipe();
+    setBase(apBaseFile(r));
+    litStack.classList.toggle("time-dawn", r.time === "dawn");
+    litStack.classList.toggle("time-dusk", r.time === "dusk");
+    litStack.classList.toggle("nomotion", !r.motion || reduced);
+
+    /* elements */
+    var els = ["blossom", "pavilion", "rockw", "rocke", "rocksfg"], i, el, st;
+    for (i = 0; i < els.length; i++) {
+      el = els[i]; st = r.elements[el];
+      var patch = patchImgs["under-" + el];
+      if (st !== "home") {
+        ensureSrc(patch, apSeasonFile("under-" + el, r.season));
+        place(patch, AP_GEO["under-" + el], 0, 0);
+        show(patch, true);
+      } else show(patch, false);
+    }
+    moveElement(cutBlossom, shadowBlossom, "blossom", r);
+    moveElement(cutRockw, shadowRockw, "rockw", r);
+    var glow = $("layerWinGlow");
+    if (r.elements.pavilion === "home") {
+      ensureSrc(glow, AP_VALLEY_DIR + "win-glow.webp");
+      place(glow, AP_GEO["win-glow"], 0, 0);
+      glow.className = "patch winglow";
+      show(glow, true);
+    } else show(glow, false);
+
+    /* weather */
+    var kind = r.weather.kind;
+    var sheen = $("layerSheen"), rainRiver = $("patchRainRiver"), rainWin = $("patchRainWindows");
+    if (kind === "rain") {
+      ensureSrc(sheen, AP_VALLEY_DIR + "rain-sheen.webp");
+      sheen.style.opacity = "0.5";
+      ensureSrc(rainRiver, AP_VALLEY_DIR + "rain-river.webp");
+      place(rainRiver, AP_GEO["rain-river"], 0, 0);
+      rainRiver.style.opacity = "1";
+      if (r.elements.pavilion === "home") {
+        ensureSrc(rainWin, AP_VALLEY_DIR + "rain-windows.webp");
+        place(rainWin, AP_GEO["rain-windows"], 0, 0);
+        rainWin.style.opacity = "0.9";
+      } else rainWin.style.opacity = "0";
+      rainBox.style.opacity = "0.55";
+    } else {
+      sheen.style.opacity = "0"; rainRiver.style.opacity = "0";
+      rainWin.style.opacity = "0"; rainBox.style.opacity = "0";
+    }
+    var mist = $("layerMist");
+    ensureSrc(mist, AP_VALLEY_DIR + "mist.webp");
+    mist.style.opacity = kind === "mist" ? "0.95" : (kind === "rain" ? "0.5" : "0.28");
+    $("layerMistVeil").style.opacity = kind === "mist" ? "1" : "0";
+    var glint = $("layerGlint");
+    ensureSrc(glint, AP_VALLEY_DIR + "glint.webp");
+    glint.style.filter = kind === "rain" ? "brightness(.55)" : (kind === "mist" ? "brightness(.75)" : "");
+
+    /* restoration and glaze */
+    var dmg = $("layerDamage");
+    ensureSrc(dmg, AP_VALLEY_DIR + "damaged.webp");
+    dmg.style.opacity = String((1 - r.restoration) * 0.92);
+    var glaze = $("layerGlaze");
+    glaze.className = "layer" + (r.glaze ? " glaze-" + r.glaze : "");
+
+    /* signature and plaque */
+    var sig = $("layerSignature");
+    if (r.signed && r.signed.img) {
+      if (sig.getAttribute("src") !== r.signed.img) sig.src = r.signed.img;
+      sig.style.left = "71%"; sig.style.top = "90.5%"; sig.style.width = "25%"; sig.style.height = "auto";
+      show(sig, true);
+    } else show(sig, false);
+    var pv = $("plaqueVersion");
+    if (r.signed && r.signed.name) {
+      pv.textContent = "Your version: " + r.signed.name;
+      pv.classList.remove("hidden");
+    } else pv.classList.add("hidden");
+
+    /* crop */
+    applyCrop(r.crop);
+    buildPetals();
+    $("motionBtn").textContent = r.motion ? "Motion: on" : "Motion: off";
+  }
+  function moveElement(cut, shadow, el, r){
+    var st = r.elements[el];
+    var off = AP_ANCHORS[el] && AP_ANCHORS[el][st];
+    if (!off) { show(cut, false); show(shadow, false); return; }
+    ensureSrc(cut, apSeasonFile("el-" + el, r.season));
+    place(cut, AP_GEO["el-" + el], off[0], off[1]);
+    cut.classList.toggle("bobbing", el === "rockw" && r.motion && !reduced);
+    show(cut, true);
+    ensureSrc(shadow, AP_VALLEY_DIR + "shadow-" + el + ".webp");
+    place(shadow, AP_GEO["el-" + el], off[0] + 0.008, off[1] + 0.014);
+    show(shadow, true);
+  }
+  function applyCrop(crop){
+    if (crop && AP_CROP_VIEWS[crop]) {
+      var c = AP_CROP_VIEWS[crop];
+      wrap.style.transformOrigin = (c.origin[0] * 100) + "% " + (c.origin[1] * 100) + "%";
+      wrap.style.transform = "scale(" + c.scale + ")";
+    } else {
+      wrap.style.transform = "";
+      wrap.style.transformOrigin = "50% 50%";
+    }
+  }
+
   /* ---------- views ---------- */
-  function swap(showEl, hideEl){
-    hideEl.classList.add("leaving");
-    window.setTimeout(function(){
-      hideEl.classList.add("hidden");
-      hideEl.classList.remove("leaving");
-      showEl.classList.remove("hidden");
-      window.scrollTo(0, 0);
-    }, reduced ? 0 : 180);
+  var views = [wing, approach, collectionView];
+  function swapTo(showEl){
+    views.forEach(function(v){
+      if (v === showEl) { v.classList.remove("hidden"); v.classList.remove("leaving"); }
+      else v.classList.add("hidden");
+    });
+    window.scrollTo(0, 0);
   }
   $("frameValley").addEventListener("click", function(){
     hushEnsure(); hushTap();
-    swap(approach, wing);
+    renderAll();
+    swapTo(approach);
   });
   $("backBtn").addEventListener("click", function(){
     hushTap();
-    swap(wing, approach);
+    closeMenu();
+    swapTo(wing);
+  });
+  $("collectionBtn").addEventListener("click", function(){
+    hushEnsure(); hushTap();
+    renderCollection();
+    swapTo(collectionView);
+  });
+  $("collBackBtn").addEventListener("click", function(){
+    hushTap();
+    swapTo(wing);
   });
   var draped = document.querySelectorAll(".drape-btn");
   Array.prototype.forEach.call(draped, function(btn){
@@ -595,82 +1088,376 @@ function apIdbList(){
     });
   });
 
-  /* ---------- restore and print ---------- */
+  /* ---------- reset, motion, restoring ---------- */
   $("restoreBtn").addEventListener("click", function(){
     hushTap();
     apResetPainting(state, "valley");
     apSaveState(window.localStorage, state);
     applyShaft(AP_SHAFT.home);
-    $("approachNote").textContent = "Restored. Your copy hangs as it first did.";
+    petalKey = "";
+    renderAll();
+    note("Reset. Your copy hangs as it first did, varnish and all.");
   });
+  $("motionBtn").addEventListener("click", function(){
+    hushTap();
+    recipe().motion = !recipe().motion;
+    persist();
+    petalKey = "";
+    renderAll();
+  });
+  $("restoreStepBtn").addEventListener("click", function(){
+    hushTap();
+    var r = recipe();
+    if (r.restoration >= 1) { note("Fully restored. The painting stands as it was painted."); return; }
+    r.restoration = apRestorationStep(r.restoration);
+    persist();
+    renderAll();
+    var stepNo = Math.round(r.restoration * 3);
+    note(r.restoration >= 1
+      ? "The last of the varnish lifts. Fully restored."
+      : "The varnish lifts a little more. Restoring, step " + stepNo + " of 3.");
+  });
+
+  /* ---------- verb menus ---------- */
+  var menuPanel = $("menuPanel"), openMenu = null;
+  function closeMenu(){
+    openMenu = null;
+    menuPanel.classList.add("hidden");
+    Array.prototype.forEach.call(document.querySelectorAll("[data-menu]"), function(b){
+      b.classList.remove("sel");
+    });
+  }
+  function optRow(options, current, onPick){
+    var row = document.createElement("div");
+    row.className = "row";
+    options.forEach(function(o){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "opt" + (o.value === current ? " sel" : "");
+      b.textContent = o.label;
+      b.addEventListener("click", function(){ hushTap(); onPick(o.value); });
+      row.appendChild(b);
+    });
+    return row;
+  }
+  function menuShell(title){
+    menuPanel.innerHTML = "";
+    var h = document.createElement("h3");
+    h.textContent = title;
+    menuPanel.appendChild(h);
+    menuPanel.classList.remove("hidden");
+  }
+  function cap(s){ return s[0].toUpperCase() + s.slice(1); }
+  function buildMenu(kind){
+    var r = recipe();
+    if (kind === "season") {
+      menuShell("Season");
+      menuPanel.appendChild(optRow(AP_SEASONS.map(function(s){ return { value: s, label: cap(s) }; }), r.season,
+        function(v){ r.season = v; persist(); renderAll(); buildMenu("season"); }));
+    } else if (kind === "time") {
+      menuShell("Time of day");
+      menuPanel.appendChild(optRow(AP_TIMES.map(function(t){ return { value: t, label: cap(t) }; }), r.time,
+        function(v){ r.time = v; persist(); renderAll(); buildMenu("time"); }));
+      var p = document.createElement("p"); p.className = "mnote";
+      p.textContent = "Night is the painting as painted. Dawn and dusk are its own repaints of the light.";
+      menuPanel.appendChild(p);
+    } else if (kind === "weather") {
+      menuShell("Weather");
+      menuPanel.appendChild(optRow(AP_WEATHERS.map(function(w){ return { value: w, label: cap(w) }; }), r.weather.kind,
+        function(v){ r.weather.kind = v; persist(); petalKey = ""; renderAll(); buildMenu("weather"); }));
+      var p2 = document.createElement("p"); p2.className = "mnote";
+      p2.textContent = "Rain is answered by the painting itself: wet stone, a swollen river, warmer windows.";
+      menuPanel.appendChild(p2);
+    } else if (kind === "elements") {
+      menuShell("Elements");
+      Object.keys(AP_ELEMENTS).forEach(function(el){
+        var meta = AP_ELEMENTS[el];
+        var row = document.createElement("div");
+        row.className = "row";
+        var name = document.createElement("span");
+        name.className = "elname";
+        name.textContent = meta.label;
+        row.appendChild(name);
+        meta.anchors.forEach(function(a){
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "opt" + (r.elements[el] === a ? " sel" : "");
+          b.textContent = meta.anchorLabels[a];
+          b.addEventListener("click", function(){
+            hushTap();
+            r.elements[el] = a; persist(); petalKey = ""; renderAll(); buildMenu("elements");
+          });
+          row.appendChild(b);
+        });
+        menuPanel.appendChild(row);
+      });
+    } else if (kind === "glaze") {
+      menuShell("Glaze");
+      var opts = [{ value: null, label: "No glaze" }].concat(AP_GLAZES.map(function(g){
+        return { value: g, label: cap(g) === "Warm" ? "Warm gold" : (g === "cool" ? "Cool umber" : "Rose") };
+      }));
+      menuPanel.appendChild(optRow(opts, r.glaze,
+        function(v){ r.glaze = v; persist(); renderAll(); buildMenu("glaze"); }));
+    } else if (kind === "view") {
+      menuShell("View");
+      var vopts = [{ value: null, label: "Full canvas" }].concat(AP_CROPS.map(function(c){
+        return { value: c, label: AP_CROP_VIEWS[c].label };
+      }));
+      menuPanel.appendChild(optRow(vopts, r.crop,
+        function(v){ r.crop = v; persist(); renderAll(); buildMenu("view"); }));
+    } else if (kind === "sign") {
+      buildSignMenu();
+    }
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-menu]"), function(btn){
+    btn.addEventListener("click", function(){
+      hushEnsure();
+      var kind = btn.getAttribute("data-menu");
+      if (openMenu === kind) { closeMenu(); return; }
+      closeMenu();
+      openMenu = kind;
+      btn.classList.add("sel");
+      buildMenu(kind);
+    });
+  });
+
+  /* ---------- signing ---------- */
+  var padCtx = null, padInk = false, padDrawing = null;
+  function buildSignMenu(){
+    menuShell("Sign and save");
+    var r = recipe();
+    var input = document.createElement("input");
+    input.type = "text";
+    input.id = "signName";
+    input.placeholder = "Name this version";
+    input.maxLength = 60;
+    if (r.signed && r.signed.name) input.value = r.signed.name;
+    menuPanel.appendChild(input);
+    var pad = document.createElement("canvas");
+    pad.id = "signPad";
+    pad.width = 600; pad.height = 220;
+    menuPanel.appendChild(pad);
+    padCtx = pad.getContext("2d");
+    padCtx.lineWidth = 5; padCtx.lineCap = "round"; padCtx.lineJoin = "round";
+    padCtx.strokeStyle = "#d9b264";
+    padInk = false; padDrawing = null;
+    function padPos(e){
+      var rect = pad.getBoundingClientRect();
+      return { x: (e.clientX - rect.left) / rect.width * pad.width,
+               y: (e.clientY - rect.top) / rect.height * pad.height };
+    }
+    pad.addEventListener("pointerdown", function(e){
+      padDrawing = padPos(e);
+      try { pad.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+    });
+    pad.addEventListener("pointermove", function(e){
+      if (!padDrawing) return;
+      var p = padPos(e);
+      padCtx.beginPath();
+      padCtx.moveTo(padDrawing.x, padDrawing.y);
+      padCtx.lineTo(p.x, p.y);
+      padCtx.stroke();
+      padDrawing = p;
+      padInk = true;
+    });
+    function padEnd(){ padDrawing = null; }
+    pad.addEventListener("pointerup", padEnd);
+    pad.addEventListener("pointercancel", padEnd);
+    var row = document.createElement("div");
+    row.className = "row";
+    var clear = document.createElement("button");
+    clear.type = "button"; clear.className = "opt"; clear.textContent = "Clear the mark";
+    clear.addEventListener("click", function(){
+      hushTap();
+      padCtx.clearRect(0, 0, pad.width, pad.height);
+      padInk = false;
+    });
+    var save = document.createElement("button");
+    save.type = "button"; save.className = "opt"; save.textContent = "Save this version";
+    save.addEventListener("click", function(){
+      hushTap();
+      var name = (input.value || "").trim() || "Untitled version";
+      var snapshot = JSON.parse(JSON.stringify(recipe()));
+      snapshot.signed = {
+        img: padInk ? pad.toDataURL("image/png") : (recipe().signed ? recipe().signed.img : null),
+        name: name,
+        at: new Date().toISOString()
+      };
+      recipe().signed = snapshot.signed;
+      state.collection.unshift({
+        id: "v" + Date.now(), painting: "valley", name: name,
+        recipe: snapshot, savedAt: snapshot.signed.at
+      });
+      persist();
+      renderAll();
+      closeMenu();
+      note("Kept in your collection: " + name + ".");
+    });
+    row.appendChild(clear);
+    row.appendChild(save);
+    menuPanel.appendChild(row);
+    var p = document.createElement("p"); p.className = "mnote";
+    p.textContent = "Draw your mark in gold. It rests at the painting's lower corner, on the print as on the canvas. The original is never signed; only your versions are.";
+    menuPanel.appendChild(p);
+  }
+
+  /* ---------- the collection room ---------- */
+  function renderCollection(){
+    var list = $("collList");
+    list.innerHTML = "";
+    if (!state.collection.length) {
+      $("collNote").textContent = "Nothing kept yet. Sign a version of the Valley and it will hang here.";
+      return;
+    }
+    $("collNote").textContent = "";
+    state.collection.forEach(function(entry){
+      var item = document.createElement("article");
+      item.className = "coll-item";
+      var h = document.createElement("h2");
+      h.textContent = entry.name;
+      item.appendChild(h);
+      var when = document.createElement("p");
+      when.className = "when";
+      var d = new Date(entry.savedAt);
+      when.textContent = "The Valley of the Golden River, kept " + (isFinite(d) ? d.toLocaleDateString() : "");
+      item.appendChild(when);
+      var desc = document.createElement("p");
+      desc.className = "desc";
+      desc.textContent = apDescribeRecipe(entry.recipe);
+      item.appendChild(desc);
+      var controls = document.createElement("div");
+      controls.className = "controls";
+      var load = document.createElement("button");
+      load.type = "button"; load.className = "ctl"; load.textContent = "Step up to it";
+      load.addEventListener("click", function(){
+        hushTap();
+        state.copies.valley = apNormalizeRecipe(JSON.parse(JSON.stringify(entry.recipe)), "valley");
+        persist();
+        applyShaft(apGetShaft(state, "valley"));
+        petalKey = "";
+        renderAll();
+        swapTo(approach);
+      });
+      var del = document.createElement("button");
+      del.type = "button"; del.className = "ctl"; del.textContent = "Let it go";
+      del.addEventListener("click", function(){
+        hushTap();
+        if (del.getAttribute("data-armed")) {
+          state.collection = state.collection.filter(function(e){ return e.id !== entry.id; });
+          persist();
+          renderCollection();
+        } else {
+          del.setAttribute("data-armed", "1");
+          del.textContent = "Sure? Tap again";
+          window.setTimeout(function(){
+            del.removeAttribute("data-armed");
+            del.textContent = "Let it go";
+          }, 2600);
+        }
+      });
+      controls.appendChild(load);
+      controls.appendChild(del);
+      item.appendChild(controls);
+      list.appendChild(item);
+    });
+  }
+
+  /* ---------- print: flatten the full current stack ---------- */
+  var imgCache = {};
+  function loadImg(file){
+    if (imgCache[file]) return imgCache[file];
+    imgCache[file] = new Promise(function(resolve){
+      var im = new Image();
+      im.onload = function(){ resolve(im); };
+      im.onerror = function(){ resolve(null); };
+      im.src = file;
+    });
+    return imgCache[file];
+  }
   $("printBtn").addEventListener("click", function(){
     hushTap();
     savePrint();
   });
   function savePrint(){
-    var img = reveal;
-    if (!img.complete || !img.naturalWidth) {
-      $("approachNote").textContent = "The painting is still arriving. Try again in a moment.";
-      return;
+    var r = recipe(), W = 720, H = 1440;
+    var jobs = [];
+    function job(file, blend, alpha, geo, dx, dy){
+      jobs.push(loadImg(file).then(function(im){ return { im: im, blend: blend, alpha: alpha, geo: geo, dx: dx || 0, dy: dy || 0 }; }));
     }
-    try {
-      var W = img.naturalWidth, H = img.naturalHeight;
-      var ang = AP_SHAFT.angle * Math.PI / 180;
-      var dx = Math.sin(ang), dy = -Math.cos(ang);
-      var L = Math.abs(W * dx) + Math.abs(H * dy);
-      var cx = W / 2, cy = H / 2;
-      function axisPoint(p){ var t = (p - 50) / 100 * L; return [cx + dx * t, cy + dy * t]; }
-      function flat(draw){
-        var c = document.createElement("canvas"); c.width = W; c.height = H;
-        draw(c.getContext("2d"), c); return c;
-      }
-      var veiled = flat(function(x){
-        x.filter = "brightness(0.30) sepia(0.52) saturate(0.52) contrast(1.03)";
-        x.drawImage(img, 0, 0, W, H);
-      });
-      var stops = apBandStops(shaftPos);
-      var rich = flat(function(x){
-        x.drawImage(img, 0, 0, W, H);
-        x.globalCompositeOperation = "destination-in";
-        var p0 = axisPoint(stops[0]), p1 = axisPoint(stops[3]);
-        var g = x.createLinearGradient(p0[0], p0[1], p1[0], p1[1]);
-        var f = (stops[1] - stops[0]) / (stops[3] - stops[0]);
-        g.addColorStop(0, "rgba(0,0,0,0)");
-        g.addColorStop(f, "rgba(0,0,0,1)");
-        g.addColorStop(1 - f, "rgba(0,0,0,1)");
-        g.addColorStop(1, "rgba(0,0,0,0)");
-        x.fillStyle = g; x.fillRect(0, 0, W, H);
-      });
-      var out = flat(function(x){
-        x.drawImage(veiled, 0, 0);
-        x.drawImage(rich, 0, 0);
-        var bs = apBandStops(shaftPos, 9, 9);
-        var q0 = axisPoint(bs[0]), q1 = axisPoint(bs[3]);
-        var g2 = x.createLinearGradient(q0[0], q0[1], q1[0], q1[1]);
-        g2.addColorStop(0, "rgba(255,176,96,0)");
-        g2.addColorStop(0.5, "rgba(255,206,130,0.20)");
-        g2.addColorStop(1, "rgba(255,176,96,0)");
-        x.globalCompositeOperation = "screen";
-        x.fillStyle = g2; x.fillRect(0, 0, W, H);
-      });
-      if (out.toBlob) {
-        out.toBlob(function(blob){
-          if (!blob) { $("approachNote").textContent = "The print could not be made."; return; }
-          var a = document.createElement("a");
-          a.href = URL.createObjectURL(blob);
-          a.download = "the-valley-of-the-golden-river.png";
-          document.body.appendChild(a); a.click();
-          window.setTimeout(function(){
-            URL.revokeObjectURL(a.href); a.remove();
-          }, 400);
-          $("approachNote").textContent = "Print saved.";
-        }, "image/png");
-      } else {
-        $("approachNote").textContent = "The print could not be made.";
-      }
-    } catch (e) {
-      $("approachNote").textContent = "The print could not be made.";
+    job(apBaseFile(r), "source-over", 1, null);
+    if (r.weather.kind === "rain") {
+      job(AP_VALLEY_DIR + "rain-sheen.webp", "soft-light", 0.5, null);
+      job(AP_VALLEY_DIR + "rain-river.webp", "source-over", 1, AP_GEO["rain-river"]);
     }
+    ["blossom", "pavilion", "rockw", "rocke", "rocksfg"].forEach(function(el){
+      if (r.elements[el] !== "home") job(apSeasonFile("under-" + el, r.season), "source-over", 1, AP_GEO["under-" + el]);
+    });
+    [["blossom", cutBlossom], ["rockw", cutRockw]].forEach(function(pair){
+      var off = AP_ANCHORS[pair[0]] && AP_ANCHORS[pair[0]][r.elements[pair[0]]];
+      if (off) {
+        job(AP_VALLEY_DIR + "shadow-" + pair[0] + ".webp", "source-over", 0.55, AP_GEO["el-" + pair[0]], off[0] + 0.008, off[1] + 0.014);
+        job(apSeasonFile("el-" + pair[0], r.season), "source-over", 1, AP_GEO["el-" + pair[0]], off[0], off[1]);
+      }
+    });
+    if (r.elements.pavilion === "home") job(AP_VALLEY_DIR + "win-glow.webp", "screen", 0.8, AP_GEO["win-glow"]);
+    if (r.weather.kind === "rain" && r.elements.pavilion === "home")
+      job(AP_VALLEY_DIR + "rain-windows.webp", "screen", 0.9, AP_GEO["rain-windows"]);
+    job(AP_VALLEY_DIR + "glint.webp", "screen", 0.5, null);
+    job(AP_VALLEY_DIR + "mist.webp", "source-over", r.weather.kind === "mist" ? 0.95 : (r.weather.kind === "rain" ? 0.5 : 0.28), null);
+    job(AP_VALLEY_DIR + "damaged.webp", "source-over", (1 - r.restoration) * 0.92, null);
+    Promise.all(jobs).then(function(layers){
+      try {
+        var c = document.createElement("canvas");
+        c.width = W; c.height = H;
+        var x = c.getContext("2d");
+        layers.forEach(function(L){
+          if (!L.im) return;
+          x.globalCompositeOperation = L.blend;
+          x.globalAlpha = L.alpha;
+          if (L.geo) x.drawImage(L.im, (L.geo[0] + L.dx) * W, (L.geo[1] + L.dy) * H, L.geo[2] * W, L.geo[3] * H);
+          else x.drawImage(L.im, 0, 0, W, H);
+        });
+        if (r.glaze) {
+          var stops = {
+            warm: [[0, "rgba(255,176,84,0.22)"], [0.55, "rgba(146,84,20,0.10)"], [1, "rgba(60,30,4,0.12)"]],
+            cool: [[0, "rgba(96,128,168,0.20)"], [0.6, "rgba(30,44,74,0.12)"], [1, "rgba(10,16,30,0.10)"]],
+            rose: [[0, "rgba(255,138,150,0.16)"], [0.6, "rgba(120,40,60,0.10)"], [1, "rgba(50,10,20,0.08)"]]
+          }[r.glaze];
+          var g = x.createLinearGradient(0, 0, W * 0.28, H);
+          stops.forEach(function(s){ g.addColorStop(s[0], s[1]); });
+          x.globalCompositeOperation = "overlay";
+          x.globalAlpha = 1;
+          x.fillStyle = g;
+          x.fillRect(0, 0, W, H);
+        }
+        x.globalCompositeOperation = "source-over";
+        x.globalAlpha = 1;
+        if (r.signed && r.signed.img) {
+          return loadImg(r.signed.img).then(function(sig){
+            if (sig) x.drawImage(sig, 0.71 * W, 0.905 * H, 0.25 * W, 0.25 * W * sig.height / sig.width);
+            finishPrint(c);
+          });
+        }
+        finishPrint(c);
+      } catch (e) {
+        note("The print could not be made.");
+      }
+    });
+  }
+  function finishPrint(c){
+    if (!c.toBlob) { note("The print could not be made."); return; }
+    c.toBlob(function(blob){
+      if (!blob) { note("The print could not be made."); return; }
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "the-valley-of-the-golden-river.png";
+      document.body.appendChild(a); a.click();
+      window.setTimeout(function(){
+        URL.revokeObjectURL(a.href); a.remove();
+      }, 400);
+      note("Print saved.");
+    }, "image/png");
   }
 
   /* ---------- museum hush ---------- */
@@ -728,8 +1515,11 @@ function apIdbList(){
   });
 
   /* ---------- boot ---------- */
+  $("layerVeil").src = AP_VALLEY_DIR + "veil.webp";
   buildMotes();
+  buildRain();
   applyShaft(shaftPos);
+  renderAll();
   soundLabel();
   apIdbOpen();
 })();
