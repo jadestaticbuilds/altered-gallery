@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Altered Gallery</title>
+<style>
+  :root{
+    --wall:#191008;
+    --wall2:#120b06;
+    --ink:#e9dcc3;
+    --ink-dim:#b8a888;
+    --gold:#c9a45c;
+    --gold-deep:#7d5f27;
+    --panel:#241708;
+    --line:#3a2a12;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    background:radial-gradient(120% 90% at 50% 0%, #241708 0%, var(--wall) 55%, var(--wall2) 100%);
+    color:var(--ink);
+    font-family:Georgia, "Times New Roman", serif;
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+    overflow-x:hidden;
+  }
+  #app{
+    max-width:600px;
+    margin:0 auto;
+    min-height:100dvh;
+    padding:18px 18px 34px;
+    padding-bottom:34px;
+    padding-bottom:max(34px, calc(10px + env(safe-area-inset-bottom)));
+  }
+  .view{ transition:opacity .45s ease, transform .45s ease; }
+  .view.hidden{ display:none; }
+  .view.leaving{ opacity:0; transform:scale(.985); }
+
+  /* ---------- wing ---------- */
+  .wing-head{ text-align:center; padding:10px 0 4px; position:relative; }
+  .wing-head h1{ font-size:26px; font-weight:normal; letter-spacing:.14em; color:var(--ink); }
+  .wing-sub{ margin-top:4px; font-size:13px; letter-spacing:.3em; text-transform:uppercase; color:var(--ink-dim); }
+  .tag{
+    display:inline-block; margin-top:10px; padding:3px 10px;
+    border:1px solid var(--line); border-radius:999px;
+    font-size:11px; letter-spacing:.22em; color:var(--gold);
+  }
+  .wall{
+    margin-top:26px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:34px 22px;
+    align-items:start;
+  }
+  .hanging{ display:flex; flex-direction:column; align-items:center; }
+  .frame{
+    appearance:none; border:none; cursor:pointer; background:none; padding:0;
+    width:100%;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .frame .inner{
+    display:block; position:relative; overflow:hidden;
+    border:6px solid transparent;
+    border-image:linear-gradient(135deg,#8a6a2f 0%,#e3c078 28%,#6e5322 55%,#d9b264 80%,#7d5f27 100%) 1;
+    box-shadow:0 14px 28px rgba(0,0,0,.55), inset 0 0 0 2px #0d0906, inset 0 0 22px rgba(0,0,0,.5);
+    background:#0d0906;
+  }
+  .frame.portrait .inner{ aspect-ratio:1 / 2; }
+  .frame.landscape{ align-self:center; }
+  .frame.landscape .inner{ aspect-ratio:4 / 3; }
+  .frame img.art{ display:block; width:100%; height:100%; object-fit:cover; pointer-events:none; }
+  .thumb-veil{
+    position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(180deg, rgba(16,9,3,.42), rgba(16,9,3,.18) 45%, rgba(16,9,3,.5));
+  }
+  .thumb-shaft{
+    position:absolute; inset:-12%; pointer-events:none; mix-blend-mode:screen;
+    background:linear-gradient(205deg, rgba(255,176,96,0) 22%, rgba(255,176,96,.20) 44%, rgba(255,214,150,.34) 55%, rgba(255,176,96,.16) 66%, rgba(255,176,96,0) 86%);
+  }
+  .drape{
+    position:absolute; inset:0; pointer-events:none;
+    background:
+      repeating-linear-gradient(93deg, rgba(0,0,0,.20) 0 9px, rgba(255,235,200,.045) 9px 18px),
+      linear-gradient(168deg, #4a2c17 0%, #5d3a1e 34%, #3c2412 68%, #2c1a0c 100%);
+  }
+  .drape::after{
+    content:""; position:absolute; left:0; right:0; top:0; height:16%;
+    background:linear-gradient(180deg, rgba(0,0,0,.4), rgba(0,0,0,0));
+  }
+  .plaque{
+    margin-top:12px; width:92%;
+    background:linear-gradient(180deg, #2b1d0e, #211505);
+    border:1px solid var(--line);
+    padding:9px 11px 10px; text-align:center;
+    box-shadow:0 6px 14px rgba(0,0,0,.4);
+  }
+  .plaque h2{ font-size:14.5px; font-weight:normal; letter-spacing:.04em; color:var(--ink); }
+  .plaque .school{ margin-top:2px; font-size:11.5px; font-style:italic; color:var(--gold); }
+  .plaque .line{ margin-top:5px; font-size:12px; line-height:1.45; color:var(--ink-dim); }
+  .plaque .prep{ margin-top:6px; font-size:10.5px; letter-spacing:.24em; text-transform:uppercase; color:var(--ink-dim); }
+  .note{
+    min-height:22px; margin-top:26px; text-align:center;
+    font-size:13.5px; font-style:italic; color:var(--ink-dim);
+  }
+
+  /* ---------- approach ---------- */
+  .stage-wrap{ padding-top:6px; }
+  .stage{
+    position:relative; width:min(94vw, 350px); aspect-ratio:1 / 2;
+    margin:0 auto; overflow:hidden; touch-action:none; cursor:ew-resize;
+    border:7px solid transparent;
+    border-image:linear-gradient(135deg,#8a6a2f 0%,#e3c078 28%,#6e5322 55%,#d9b264 80%,#7d5f27 100%) 1;
+    box-shadow:0 22px 44px rgba(0,0,0,.65), inset 0 0 0 2px #0d0906;
+    background:#0d0906;
+    outline:none;
+  }
+  .stage:focus-visible{ box-shadow:0 22px 44px rgba(0,0,0,.65), 0 0 0 3px var(--gold); }
+  .layer{ position:absolute; inset:0; width:100%; height:100%; }
+  img.layer{ object-fit:cover; pointer-events:none; }
+  .veil{
+    filter:brightness(.30) sepia(.52) saturate(.52) contrast(1.03);
+  }
+  .veilshade{
+    pointer-events:none;
+    background:radial-gradient(115% 90% at 50% 42%, rgba(0,0,0,0) 46%, rgba(12,6,2,.38) 82%, rgba(8,4,1,.62) 100%);
+  }
+  .reveal{ pointer-events:none; }
+  .beam{ pointer-events:none; mix-blend-mode:screen; }
+  .motes{ pointer-events:none; overflow:hidden; }
+  .mote{
+    position:absolute; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,226,170,.95) 0%, rgba(255,196,120,.35) 55%, rgba(255,196,120,0) 100%);
+    animation-name:drift, twinkle;
+    animation-timing-function:ease-in-out, ease-in-out;
+    animation-iteration-count:infinite, infinite;
+    animation-direction:alternate, alternate;
+  }
+  @keyframes drift{ from{ transform:translate(0,0); } to{ transform:translate(var(--dx), var(--dy)); } }
+  @keyframes twinkle{ from{ opacity:.25; } to{ opacity:.9; } }
+  @media (prefers-reduced-motion: reduce){
+    .mote{ animation:none; opacity:.55; }
+    .view{ transition:none; }
+  }
+  .approach-ui{ max-width:430px; margin:18px auto 0; text-align:center; }
+  .plaque-big{ width:100%; margin-top:0; }
+  .hint{ margin-top:12px; font-size:13px; font-style:italic; color:var(--ink-dim); }
+  .controls{
+    margin-top:16px; display:flex; flex-wrap:wrap; gap:10px; justify-content:center;
+  }
+  button.ctl{
+    appearance:none; cursor:pointer;
+    min-height:44px; min-width:44px; padding:10px 18px;
+    font-family:inherit; font-size:14px; letter-spacing:.06em;
+    color:var(--ink); background:linear-gradient(180deg, #2e2008, #201503);
+    border:1px solid var(--gold-deep); border-radius:3px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  button.ctl:active{ background:linear-gradient(180deg, #3a290c, #281a05); }
+  .wing-foot{ margin-top:22px; display:flex; justify-content:center; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ================= WING ================= -->
+  <section id="wing" class="view">
+    <header class="wing-head">
+      <h1>THE ALTERED GALLERY</h1>
+      <p class="wing-sub">Wing One</p>
+      <span class="tag">STAGE 0</span>
+    </header>
+
+    <div class="wall">
+      <article class="hanging">
+        <button class="frame portrait" id="frameValley" aria-label="Step up to The Valley of the Golden River">
+          <span class="inner">
+            <img class="art" src="assets/valley.webp" alt="" draggable="false">
+            <span class="thumb-veil"></span>
+            <span class="thumb-shaft"></span>
+          </span>
+        </button>
+        <div class="plaque">
+          <h2>The Valley of the Golden River</h2>
+          <p class="school">in the Caravaggio manner</p>
+          <p class="line">A river of gold crosses a dark valley, and the travelling light decides what may be seen.</p>
+        </div>
+      </article>
+
+      <article class="hanging">
+        <button class="frame landscape drape-btn" data-title="The Summons" aria-label="The Summons, in preparation">
+          <span class="inner"><span class="drape"></span></span>
+        </button>
+        <div class="plaque">
+          <h2>The Summons</h2>
+          <p class="school">in the Caravaggio manner</p>
+          <p class="line">Figures gathered at a table, waiting for the light to choose among them.</p>
+          <p class="prep">In preparation</p>
+        </div>
+      </article>
+
+      <article class="hanging">
+        <button class="frame landscape drape-btn" data-title="The Harbor at Low Water" aria-label="The Harbor at Low Water, in preparation">
+          <span class="inner"><span class="drape"></span></span>
+        </button>
+        <div class="plaque">
+          <h2>The Harbor at Low Water</h2>
+          <p class="school">in the Dutch Golden Age manner</p>
+          <p class="line">Ships rest under a wide sky, and the weather has not yet been decided.</p>
+          <p class="prep">In preparation</p>
+        </div>
+      </article>
+
+      <article class="hanging">
+        <button class="frame portrait drape-btn" data-title="The Orchard in Blossom" aria-label="The Orchard in Blossom, in preparation">
+          <span class="inner"><span class="drape"></span></span>
+        </button>
+        <div class="plaque">
+          <h2>The Orchard in Blossom</h2>
+          <p class="school">in the Romantic manner</p>
+          <p class="line">One hillside of trees, holding every season it has ever worn.</p>
+          <p class="prep">In preparation</p>
+        </div>
+      </article>
+
+      <article class="hanging">
+        <button class="frame portrait drape-btn" data-title="Still Life with Silver and Fruit" aria-label="Still Life with Silver and Fruit, in preparation">
+          <span class="inner"><span class="drape"></span></span>
+        </button>
+        <div class="plaque">
+          <h2>Still Life with Silver and Fruit</h2>
+          <p class="school">in the Dutch manner</p>
+          <p class="line">A laid table in a quiet room, each object placed so it may be moved.</p>
+          <p class="prep">In preparation</p>
+        </div>
+      </article>
+
+      <article class="hanging">
+        <button class="frame portrait drape-btn" data-title="Portrait of a Lady in Amber Light" aria-label="Portrait of a Lady in Amber Light, in preparation">
+          <span class="inner"><span class="drape"></span></span>
+        </button>
+        <div class="plaque">
+          <h2>Portrait of a Lady in Amber Light</h2>
+          <p class="school">in the Baroque manner</p>
+          <p class="line">A single face, lit the way candlelight would have found it.</p>
+          <p class="prep">In preparation</p>
+        </div>
+      </article>
+    </div>
+
+    <p class="note" id="wingNote" role="status"></p>
+
+    <div class="wing-foot">
+      <button class="ctl" id="soundBtnWing" type="button">Sound: on</button>
+    </div>
+  </section>
+
+  <!-- ================= APPROACH ================= -->
+  <section id="approach" class="view hidden">
+    <div class="stage-wrap">
+      <div id="stage" class="stage" tabindex="0" role="slider" aria-label="Shaft of light position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+        <img class="layer veil" src="assets/valley.webp" alt="" draggable="false">
+        <div class="layer veilshade"></div>
+        <img class="layer reveal" id="layerReveal" src="assets/valley.webp" alt="The Valley of the Golden River" draggable="false">
+        <div class="layer beam" id="layerBeam"></div>
+        <div class="layer motes" id="layerMotes"></div>
+      </div>
+    </div>
+    <div class="approach-ui">
+      <div class="plaque plaque-big">
+        <h2>The Valley of the Golden River</h2>
+        <p class="school">in the Caravaggio manner</p>
+        <p class="line">A river of gold crosses a dark valley, and the travelling light decides what may be seen.</p>
+      </div>
+      <p class="hint">Drag across the painting to move the light.</p>
+      <div class="controls">
+        <button class="ctl" id="backBtn" type="button">Step back</button>
+        <button class="ctl" id="restoreBtn" type="button">Restore</button>
+        <button class="ctl" id="printBtn" type="button">Save a print</button>
+        <button class="ctl" id="soundBtn" type="button">Sound: on</button>
+      </div>
+      <p class="note" id="approachNote" role="status"></p>
+    </div>
+  </section>
+</div>
+
+<script id="core">
+/* The Altered Gallery: state recipes and shaft geometry.
+   Pure functions only. The smoke test loads this block in Node. */
+var AP_STORE_KEY = "ap-state-v1";
+var AP_SCHEMA = 1;
+
+/* Shaft geometry, in gradient percent space along the shaft axis.
+   The axis runs at 205 degrees (from the upper right, as painted).
+   A band position is a center percent; core is the fully lit width,
+   feather is the soft falloff on each side. */
+var AP_SHAFT = {
+  angle: 205,
+  core: 12,
+  feather: 21,
+  home: 0.5,
+  cMin: 8,
+  cMax: 92
+};
+
+function apClamp01(v){
+  v = Number(v);
+  if (!isFinite(v)) return AP_SHAFT.home;
+  return v < 0 ? 0 : (v > 1 ? 1 : v);
+}
+function apShaftCenter(pos){
+  return AP_SHAFT.cMin + (AP_SHAFT.cMax - AP_SHAFT.cMin) * apClamp01(pos);
+}
+/* Returns [outer0, core0, core1, outer1] gradient stop percents. */
+function apBandStops(pos, coreExtra, featherExtra){
+  var c = apShaftCenter(pos);
+  var core = AP_SHAFT.core + (coreExtra || 0);
+  var feather = AP_SHAFT.feather + (featherExtra || 0);
+  return [c - core - feather, c - core, c + core, c + core + feather];
+}
+
+function apDefaultRecipe(painting){
+  return {
+    v: AP_SCHEMA,
+    painting: painting,
+    base: "original",
+    light: { pos: AP_SHAFT.home },
+    time: null,
+    season: null,
+    weather: null,
+    glaze: null,
+    elements: {},
+    figures: {},
+    motion: true,
+    restoration: 1,
+    crop: null,
+    repaints: [],
+    signed: null,
+    updated: null
+  };
+}
+function apDefaultState(){
+  return {
+    v: AP_SCHEMA,
+    sound: true,
+    copies: { valley: apDefaultRecipe("valley") },
+    collection: []
+  };
+}
+function apNormalizeRecipe(raw, painting){
+  var d = apDefaultRecipe(painting);
+  if (!raw || typeof raw !== "object") return d;
+  var out = {}, k;
+  for (k in d) out[k] = d[k];
+  for (k in raw) out[k] = raw[k];
+  out.v = AP_SCHEMA;
+  out.painting = painting;
+  out.light = { pos: apClamp01(raw.light && raw.light.pos) };
+  if (!out.elements || typeof out.elements !== "object") out.elements = {};
+  if (!out.figures || typeof out.figures !== "object") out.figures = {};
+  if (!Array.isArray(out.repaints)) out.repaints = [];
+  return out;
+}
+function apNormalizeState(raw){
+  var d = apDefaultState();
+  if (!raw || typeof raw !== "object") return d;
+  var out = {
+    v: AP_SCHEMA,
+    sound: raw.sound !== false,
+    copies: {},
+    collection: Array.isArray(raw.collection) ? raw.collection : []
+  };
+  var copies = (raw.copies && typeof raw.copies === "object") ? raw.copies : {};
+  var id;
+  for (id in copies) out.copies[id] = apNormalizeRecipe(copies[id], id);
+  if (!out.copies.valley) out.copies.valley = apDefaultRecipe("valley");
+  return out;
+}
+function apLoadState(storage){
+  try {
+    var raw = storage.getItem(AP_STORE_KEY);
+    if (!raw) return apDefaultState();
+    return apNormalizeState(JSON.parse(raw));
+  } catch (e) {
+    return apDefaultState();
+  }
+}
+function apSaveState(storage, state){
+  try {
+    storage.setItem(AP_STORE_KEY, JSON.stringify(state));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+function apGetShaft(state, painting){
+  var r = state && state.copies ? state.copies[painting] : null;
+  if (!r || !r.light) return AP_SHAFT.home;
+  return apClamp01(r.light.pos);
+}
+function apSetShaft(state, painting, pos, nowIso){
+  if (!state.copies[painting]) state.copies[painting] = apDefaultRecipe(painting);
+  state.copies[painting].light.pos = apClamp01(pos);
+  state.copies[painting].updated = nowIso || null;
+  return state;
+}
+function apResetPainting(state, painting){
+  state.copies[painting] = apDefaultRecipe(painting);
+  return state;
+}
+</script>
+
+<script id="idb">
+/* The Altered Gallery: on-device image store for repainted versions.
+   Stage 0 wires the wrapper; Stage 3 puts it to work. Every call
+   feature-detects and resolves quietly when IndexedDB is absent. */
+var AP_IDB_NAME = "ap-images";
+var AP_IDB_STORE = "images";
+var apIdbPromise = null;
+
+function apIdbAvailable(){
+  return typeof window !== "undefined" && !!window.indexedDB;
+}
+function apIdbOpen(){
+  if (!apIdbAvailable()) return Promise.resolve(null);
+  if (apIdbPromise) return apIdbPromise;
+  apIdbPromise = new Promise(function(resolve){
+    var req;
+    try { req = window.indexedDB.open(AP_IDB_NAME, 1); }
+    catch (e) { resolve(null); return; }
+    req.onupgradeneeded = function(){
+      var db = req.result;
+      if (!db.objectStoreNames.contains(AP_IDB_STORE)) {
+        db.createObjectStore(AP_IDB_STORE, { keyPath: "key" });
+      }
+    };
+    req.onsuccess = function(){ resolve(req.result); };
+    req.onerror = function(){ resolve(null); };
+    req.onblocked = function(){ resolve(null); };
+  });
+  return apIdbPromise;
+}
+function apIdbPut(key, blob, meta){
+  return apIdbOpen().then(function(db){
+    if (!db) return false;
+    return new Promise(function(resolve){
+      try {
+        var tx = db.transaction(AP_IDB_STORE, "readwrite");
+        tx.objectStore(AP_IDB_STORE).put({ key: key, blob: blob, meta: meta || {}, saved: Date.now() });
+        tx.oncomplete = function(){ resolve(true); };
+        tx.onerror = function(){ resolve(false); };
+      } catch (e) { resolve(false); }
+    });
+  });
+}
+function apIdbGet(key){
+  return apIdbOpen().then(function(db){
+    if (!db) return null;
+    return new Promise(function(resolve){
+      try {
+        var req = db.transaction(AP_IDB_STORE, "readonly").objectStore(AP_IDB_STORE).get(key);
+        req.onsuccess = function(){ resolve(req.result || null); };
+        req.onerror = function(){ resolve(null); };
+      } catch (e) { resolve(null); }
+    });
+  });
+}
+function apIdbList(){
+  return apIdbOpen().then(function(db){
+    if (!db) return [];
+    return new Promise(function(resolve){
+      try {
+        var req = db.transaction(AP_IDB_STORE, "readonly").objectStore(AP_IDB_STORE).getAllKeys();
+        req.onsuccess = function(){ resolve(req.result || []); };
+        req.onerror = function(){ resolve([]); };
+      } catch (e) { resolve([]); }
+    });
+  });
+}
+</script>
+
+<script id="shell">
+/* The Altered Gallery: shell. Views, the light verb, the hush, export. */
+(function(){
+  "use strict";
+  var state = apLoadState(window.localStorage);
+  var $ = function(id){ return document.getElementById(id); };
+  var wing = $("wing"), approach = $("approach"), stage = $("stage");
+  var reveal = $("layerReveal"), beam = $("layerBeam"), motesBox = $("layerMotes");
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- the shaft of light ---------- */
+  function maskGradient(stops){
+    return "linear-gradient(" + AP_SHAFT.angle + "deg, rgba(0,0,0,0) " + stops[0] + "%, #ffffff " +
+      stops[1] + "%, #ffffff " + stops[2] + "%, rgba(0,0,0,0) " + stops[3] + "%)";
+  }
+  function beamGradient(stops){
+    var mid = (stops[1] + stops[2]) / 2;
+    return "linear-gradient(" + AP_SHAFT.angle + "deg, rgba(255,176,96,0) " + stops[0] +
+      "%, rgba(255,176,96,0.13) " + stops[1] + "%, rgba(255,216,150,0.22) " + mid +
+      "%, rgba(255,176,96,0.13) " + stops[2] + "%, rgba(255,176,96,0) " + stops[3] + "%)";
+  }
+  var shaftPos = apGetShaft(state, "valley");
+  function applyShaft(pos){
+    shaftPos = apClamp01(pos);
+    var m = maskGradient(apBandStops(shaftPos));
+    reveal.style.webkitMaskImage = m;
+    reveal.style.maskImage = m;
+    motesBox.style.webkitMaskImage = m;
+    motesBox.style.maskImage = m;
+    beam.style.background = beamGradient(apBandStops(shaftPos, 9, 9));
+    stage.setAttribute("aria-valuenow", String(Math.round(shaftPos * 100)));
+  }
+  function persistShaft(){
+    apSetShaft(state, "valley", shaftPos, new Date().toISOString());
+    apSaveState(window.localStorage, state);
+  }
+
+  /* dust motes, scattered through the stage and masked to the beam */
+  function buildMotes(){
+    var n = reduced ? 13 : 26, i, d;
+    for (i = 0; i < n; i++) {
+      d = document.createElement("span");
+      d.className = "mote";
+      var size = 2 + Math.random() * 3.5;
+      d.style.width = size + "px";
+      d.style.height = size + "px";
+      d.style.left = (4 + Math.random() * 92) + "%";
+      d.style.top = (4 + Math.random() * 92) + "%";
+      d.style.setProperty("--dx", (Math.random() * 28 - 14) + "px");
+      d.style.setProperty("--dy", (Math.random() * 36 - 10) + "px");
+      d.style.animationDuration = (6 + Math.random() * 7) + "s, " + (3 + Math.random() * 4) + "s";
+      d.style.animationDelay = (-Math.random() * 8) + "s, " + (-Math.random() * 5) + "s";
+      motesBox.appendChild(d);
+    }
+  }
+
+  /* drag: horizontal movement carries the shaft */
+  var drag = null, rafPending = false;
+  stage.addEventListener("pointerdown", function(e){
+    drag = { x: e.clientX, pos: shaftPos };
+    try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+    hushEnsure();
+  });
+  stage.addEventListener("pointermove", function(e){
+    if (!drag) return;
+    var rect = stage.getBoundingClientRect();
+    var next = drag.pos + ((e.clientX - drag.x) / rect.width) * 1.15;
+    if (!rafPending) {
+      rafPending = true;
+      var p = next;
+      window.requestAnimationFrame(function(){ applyShaft(p); rafPending = false; });
+    }
+  });
+  function endDrag(){
+    if (!drag) return;
+    drag = null;
+    persistShaft();
+  }
+  stage.addEventListener("pointerup", endDrag);
+  stage.addEventListener("pointercancel", endDrag);
+  stage.addEventListener("keydown", function(e){
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      applyShaft(shaftPos + (e.key === "ArrowRight" ? 0.04 : -0.04));
+      persistShaft();
+      e.preventDefault();
+    }
+  });
+
+  /* ---------- views ---------- */
+  function swap(showEl, hideEl){
+    hideEl.classList.add("leaving");
+    window.setTimeout(function(){
+      hideEl.classList.add("hidden");
+      hideEl.classList.remove("leaving");
+      showEl.classList.remove("hidden");
+      window.scrollTo(0, 0);
+    }, reduced ? 0 : 180);
+  }
+  $("frameValley").addEventListener("click", function(){
+    hushEnsure(); hushTap();
+    swap(approach, wing);
+  });
+  $("backBtn").addEventListener("click", function(){
+    hushTap();
+    swap(wing, approach);
+  });
+  var draped = document.querySelectorAll(".drape-btn");
+  Array.prototype.forEach.call(draped, function(btn){
+    btn.addEventListener("click", function(){
+      hushEnsure(); hushTap();
+      $("wingNote").textContent = btn.getAttribute("data-title") +
+        " is in preparation. The frame stays draped until its painting is ready to hang.";
+    });
+  });
+
+  /* ---------- restore and print ---------- */
+  $("restoreBtn").addEventListener("click", function(){
+    hushTap();
+    apResetPainting(state, "valley");
+    apSaveState(window.localStorage, state);
+    applyShaft(AP_SHAFT.home);
+    $("approachNote").textContent = "Restored. Your copy hangs as it first did.";
+  });
+  $("printBtn").addEventListener("click", function(){
+    hushTap();
+    savePrint();
+  });
+  function savePrint(){
+    var img = reveal;
+    if (!img.complete || !img.naturalWidth) {
+      $("approachNote").textContent = "The painting is still arriving. Try again in a moment.";
+      return;
+    }
+    try {
+      var W = img.naturalWidth, H = img.naturalHeight;
+      var ang = AP_SHAFT.angle * Math.PI / 180;
+      var dx = Math.sin(ang), dy = -Math.cos(ang);
+      var L = Math.abs(W * dx) + Math.abs(H * dy);
+      var cx = W / 2, cy = H / 2;
+      function axisPoint(p){ var t = (p - 50) / 100 * L; return [cx + dx * t, cy + dy * t]; }
+      function flat(draw){
+        var c = document.createElement("canvas"); c.width = W; c.height = H;
+        draw(c.getContext("2d"), c); return c;
+      }
+      var veiled = flat(function(x){
+        x.filter = "brightness(0.30) sepia(0.52) saturate(0.52) contrast(1.03)";
+        x.drawImage(img, 0, 0, W, H);
+      });
+      var stops = apBandStops(shaftPos);
+      var rich = flat(function(x){
+        x.drawImage(img, 0, 0, W, H);
+        x.globalCompositeOperation = "destination-in";
+        var p0 = axisPoint(stops[0]), p1 = axisPoint(stops[3]);
+        var g = x.createLinearGradient(p0[0], p0[1], p1[0], p1[1]);
+        var f = (stops[1] - stops[0]) / (stops[3] - stops[0]);
+        g.addColorStop(0, "rgba(0,0,0,0)");
+        g.addColorStop(f, "rgba(0,0,0,1)");
+        g.addColorStop(1 - f, "rgba(0,0,0,1)");
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        x.fillStyle = g; x.fillRect(0, 0, W, H);
+      });
+      var out = flat(function(x){
+        x.drawImage(veiled, 0, 0);
+        x.drawImage(rich, 0, 0);
+        var bs = apBandStops(shaftPos, 9, 9);
+        var q0 = axisPoint(bs[0]), q1 = axisPoint(bs[3]);
+        var g2 = x.createLinearGradient(q0[0], q0[1], q1[0], q1[1]);
+        g2.addColorStop(0, "rgba(255,176,96,0)");
+        g2.addColorStop(0.5, "rgba(255,206,130,0.20)");
+        g2.addColorStop(1, "rgba(255,176,96,0)");
+        x.globalCompositeOperation = "screen";
+        x.fillStyle = g2; x.fillRect(0, 0, W, H);
+      });
+      if (out.toBlob) {
+        out.toBlob(function(blob){
+          if (!blob) { $("approachNote").textContent = "The print could not be made."; return; }
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "the-valley-of-the-golden-river.png";
+          document.body.appendChild(a); a.click();
+          window.setTimeout(function(){
+            URL.revokeObjectURL(a.href); a.remove();
+          }, 400);
+          $("approachNote").textContent = "Print saved.";
+        }, "image/png");
+      } else {
+        $("approachNote").textContent = "The print could not be made.";
+      }
+    } catch (e) {
+      $("approachNote").textContent = "The print could not be made.";
+    }
+  }
+
+  /* ---------- museum hush ---------- */
+  var AC = null, noiseBuf = null;
+  function hushEnsure(){
+    if (!state.sound) return;
+    if (AC) { if (AC.state === "suspended") AC.resume(); return; }
+    var Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return;
+    try {
+      AC = new Ctor();
+      var len = AC.sampleRate * 2;
+      noiseBuf = AC.createBuffer(1, len, AC.sampleRate);
+      var data = noiseBuf.getChannelData(0), i;
+      for (i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+      var src = AC.createBufferSource();
+      src.buffer = noiseBuf; src.loop = true;
+      var lp = AC.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 220;
+      var g = AC.createGain(); g.gain.value = 0.014;
+      src.connect(lp); lp.connect(g); g.connect(AC.destination);
+      src.start();
+    } catch (e) { AC = null; }
+  }
+  function hushTap(){
+    if (!AC || !state.sound) return;
+    try {
+      var t = AC.currentTime;
+      var src = AC.createBufferSource(); src.buffer = noiseBuf;
+      var bp = AC.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 720; bp.Q.value = 0.7;
+      var g = AC.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.045, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+      src.connect(bp); bp.connect(g); g.connect(AC.destination);
+      src.start(); src.stop(t + 0.13);
+    } catch (e) {}
+  }
+  function soundLabel(){
+    var s = state.sound ? "Sound: on" : "Sound: off";
+    $("soundBtn").textContent = s;
+    $("soundBtnWing").textContent = s;
+  }
+  function toggleSound(){
+    state.sound = !state.sound;
+    apSaveState(window.localStorage, state);
+    soundLabel();
+    if (state.sound) { hushEnsure(); hushTap(); }
+    else if (AC) { AC.suspend(); }
+  }
+  $("soundBtn").addEventListener("click", toggleSound);
+  $("soundBtnWing").addEventListener("click", function(){ hushEnsure(); toggleSound(); });
+  document.addEventListener("pointerdown", function once(){
+    hushEnsure();
+    document.removeEventListener("pointerdown", once);
+  });
+
+  /* ---------- boot ---------- */
+  buildMotes();
+  applyShaft(shaftPos);
+  soundLabel();
+  apIdbOpen();
+})();
+</script>
+</body>
+</html>
