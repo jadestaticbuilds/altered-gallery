@@ -512,7 +512,7 @@ var AP_MANIFEST = [
   { file: "assets/valley/base-autumn-dusk.webp", z: 0, blend: "normal", role: "season base, autumn dusk (ratio bake)" },
   { file: "assets/valley/base-winter-dawn.webp", z: 0, blend: "normal", role: "season base, winter dawn (ratio bake)" },
   { file: "assets/valley/base-winter-dusk.webp", z: 0, blend: "normal", role: "season base, winter dusk (ratio bake)" },
-  { file: "assets/valley/rain-sheen.webp", z: 1, blend: "soft-light", role: "weather response, wet sheen on stone" },
+  { file: "assets/valley/rain-sheen.webp", z: 1, blend: "soft-light", role: "retired in the fix pass: kept on disk, never loaded or shown" },
   { file: "assets/valley/rain-river.webp", z: 2, blend: "normal",    role: "weather response, the river swollen" },
   { file: "assets/valley/rain-windows.webp", z: 9, blend: "screen",  role: "weather response, windows warming" },
   { file: "assets/valley/win-glow.webp",   z: 8, blend: "screen",    role: "life, pavilion window flicker" },
@@ -979,9 +979,12 @@ function apIdbList(){
     /* weather */
     var kind = r.weather.kind;
     var sheen = $("layerSheen"), rainRiver = $("patchRainRiver"), rainWin = $("patchRainWindows");
+    /* The wet sheen is retired (fix pass, Nov 16): as a soft-light full
+       frame it flooded the canvas grey and drowned the shaft. It is
+       never loaded and never shown, in any weather. Rain is carried by
+       the streaks, the river and windows patches, and the dimmed glint. */
+    sheen.style.opacity = "0";
     if (kind === "rain") {
-      ensureSrc(sheen, AP_VALLEY_DIR + "rain-sheen.webp");
-      sheen.style.opacity = "0.5";
       ensureSrc(rainRiver, AP_VALLEY_DIR + "rain-river.webp");
       place(rainRiver, AP_GEO["rain-river"], 0, 0);
       rainRiver.style.opacity = "1";
@@ -997,7 +1000,7 @@ function apIdbList(){
     }
     var mist = $("layerMist");
     ensureSrc(mist, AP_VALLEY_DIR + "mist.webp");
-    mist.style.opacity = kind === "mist" ? "0.95" : (kind === "rain" ? "0.5" : "0.28");
+    mist.style.opacity = kind === "mist" ? "0.95" : (kind === "rain" ? "0.30" : "0.28");
     $("layerMistVeil").style.opacity = kind === "mist" ? "1" : "0";
     var glint = $("layerGlint");
     ensureSrc(glint, AP_VALLEY_DIR + "glint.webp");
@@ -1060,10 +1063,34 @@ function apIdbList(){
     });
     window.scrollTo(0, 0);
   }
+  /* Preload the Valley's season and time bases during idle time once the
+     approach view opens, so a state change never waits on a cold decode
+     (unpreloaded, a new base painted in strips on a phone, fix pass). */
+  var valleyBasesPreloaded = false;
+  function preloadValleyBases(){
+    if (valleyBasesPreloaded) return;
+    valleyBasesPreloaded = true;
+    var files = ["time-dawn.webp", "time-dusk.webp"];
+    ["summer", "autumn", "winter"].forEach(function(s){
+      files.push("base-" + s + ".webp", "base-" + s + "-dawn.webp", "base-" + s + "-dusk.webp");
+    });
+    var i = 0;
+    function step(){
+      if (i >= files.length) return;
+      var im = new Image();
+      im.src = AP_VALLEY_DIR + files[i];
+      i++;
+      if (im.decode) im.decode().then(step, step);
+      else window.setTimeout(step, 60);
+    }
+    if (window.requestIdleCallback) window.requestIdleCallback(step, { timeout: 1500 });
+    else window.setTimeout(step, 150);
+  }
   $("frameValley").addEventListener("click", function(){
     hushEnsure(); hushTap();
     renderAll();
     swapTo(approach);
+    preloadValleyBases();
   });
   $("backBtn").addEventListener("click", function(){
     hushTap();
@@ -1338,6 +1365,7 @@ function apIdbList(){
         petalKey = "";
         renderAll();
         swapTo(approach);
+        preloadValleyBases();
       });
       var del = document.createElement("button");
       del.type = "button"; del.className = "ctl"; del.textContent = "Let it go";
@@ -1387,7 +1415,6 @@ function apIdbList(){
     }
     job(apBaseFile(r), "source-over", 1, null);
     if (r.weather.kind === "rain") {
-      job(AP_VALLEY_DIR + "rain-sheen.webp", "soft-light", 0.5, null);
       job(AP_VALLEY_DIR + "rain-river.webp", "source-over", 1, AP_GEO["rain-river"]);
     }
     ["blossom", "pavilion", "rockw", "rocke", "rocksfg"].forEach(function(el){
@@ -1404,7 +1431,7 @@ function apIdbList(){
     if (r.weather.kind === "rain" && r.elements.pavilion === "home")
       job(AP_VALLEY_DIR + "rain-windows.webp", "screen", 0.9, AP_GEO["rain-windows"]);
     job(AP_VALLEY_DIR + "glint.webp", "screen", 0.5, null);
-    job(AP_VALLEY_DIR + "mist.webp", "source-over", r.weather.kind === "mist" ? 0.95 : (r.weather.kind === "rain" ? 0.5 : 0.28), null);
+    job(AP_VALLEY_DIR + "mist.webp", "source-over", r.weather.kind === "mist" ? 0.95 : (r.weather.kind === "rain" ? 0.30 : 0.28), null);
     job(AP_VALLEY_DIR + "damaged.webp", "source-over", (1 - r.restoration) * 0.92, null);
     Promise.all(jobs).then(function(layers){
       try {
